@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Users{% endblock %}
+{%block head%}
+{% load static%}
+<style>
+  .col-sm-3.space_left {
+    padding: unset;
+  }
+
+  p {
+    margin-top: 0;
+    margin-bottom: 0rem;
+  }
+
+  .product.clearfix.row {
+    margin-bottom: 1rem;
+    margin-top: 1rem;
+  }
+
+  .product {
+    display: flex;
+    width: 16rem;
+    height: 20rem;
+    margin-left: 2rem;
+    margin-right: 2rem;
+    border: 2px solid black;
+    border-radius: 10%;
+    box-shadow: 5px 4px #cbcbcb8f;
+    background-color: #c0cce791;
+  }
+
+  .arriv {
+    display: inline-flex;
+    margin-left: 2rem;
+  }
+
+  hr:not([size]) {
+    height: 1px;
+    margin-bottom: 0px;
+  }
+
+  img.iw {
+    margin-bottom: 1rem;
+    border: 1px solid;
+    border-radius: 10%;
+    margin-top: 0.2rem;
+    box-shadow: -4px 3px #95777785;
+  }
+
+  .col-sm-3.space_left {
+    padding-left: unset
+  }
+</style>
+{%endblock%}
+{% block inbody %}
+<h1 class="h2">Manage Admins</h1>
+
+<div class="btn-toolbar mb-2 mb-md-0">
+  <div class="btn-group me-2">
+    <h6>Door Status:</h6> <span style="margin-left: 1rem;" id="doorstatus">Closed</span>
+    <!-- <button type="button" class="btn btn-sm btn-outline-secondary">
+      button
+    </button> -->
+  </div>
+</div>
+
+</div>
+
+<div class="container">
+  <button type="button" onclick=" " class="btn btn-sm btn-outline-secondary" id="addusrbtn" data-toggle="modal">
+    <!--data-target="#adduser">-->
+    <i class="fas fa-user-plus"></i>
+  </button>
+  <div class="modal fade" id="adduser" tabindex="-1" role="dialog" aria-labelledby="adduser" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="adduser">Add User</h5>
+          <button type="button" class="close closeadd" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+
+          <form method="POST" action='.' id="ajax" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label class="label" for="newusername">Name: </label>
+            <input type="text" id="newusername" class="control" name="name" />
+            <hr>
+            <span>Choose file: </span>
+            <input type="file" id="newuserimage" name="image">
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary closeadd" data-dismiss="modal">Close</button>
+          <button type="button" id="saveuser" class="btn btn-primary">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <button type="button" onclick="calibrate()" class="btn btn-sm btn-outline-secondary" style="float: right;">
+    <img src="https://icon-library.com/images/calibration-icon/calibration-icon-8.jpg" height="20" width="20"><span> Calibrate</span>
+  </button>
+  
+<hr>
+</div>
+
+<div class="container">
+
+  <div id="replaceAdminDiv">
+
+  </div>
+
+
+  <div class="modal fade" id="edituser" tabindex="-1" role="dialog" aria-labelledby="edituser" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="edituser">Edit User</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="">
+            <label class="label" for="editusername">Name: </label>
+            <input type="text" id="editusername" class="control" name="username" />
+            <hr>
+            <span>Choose file: </span>
+            <input type="file" id="edituserimage" name="image">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary"  data-dismiss="modal">Close</button>
+          <button type="button" id="editsubmit" class="btn btn-primary">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+{% endblock %}
+{%block script%}
+    
+
+<script>
+  function setAdmins(data) {
+    var listAdmin = ''
+    counter = 1
+    listAdmin += '     <div class="row line">   '
+    data.forEach((element) => {
+
+      listAdmin += `
+  <div class="product clearfix row" id="ad_${element.post_id}">
+  <div class="col-sm-3 space_left">
+    <div class="arriv_2m1 clearfix">
+      <img src="/media/${element.image}" height="212" width="227" alt="abc" class="iw">
+    </div>
+  </div>
+  <p><strong id="text">${element.name}</strong></p>
+  <hr>
+  <div class="arriv clearfix justify-content-between" id="arrv_${element.post_id}">
+    <button type="button" class="btn btn-sm btn-outline-secondary" id="ediad_${element.post_id}" data-toggle="modal" data-target="#edituser"> 
+      <i class="fas fa-edit"></i>
+    </button>
+    <button type="button" class="btn btn-sm btn-outline-secondary deleteadmin" onclick="deleteadmin(this)" id="delad_${element.post_id}">
+      <i class="fas fa-trash-alt"></i>
+    </button>
+  </div>
+</div>
+`
+    })
+    listAdmin += '   </div">   '
+    counter += 1
+    $('#replaceAdminDiv').html(listAdmin)
+  }
+
+  function fetchAdmin() {
+    $.ajax('/add/getadmins', {
+      type: 'GET',  // http method
+      processData: false,
+      dataType: 'json',
+      success: function (data) {
+        data = JSON.parse(data.admins)
+        setAdmins(data)
+      }
+
+    });
+  }
+  fetchAdmin()
+  $("#addusrbtn").click(() => $("#adduser").modal('show'))
+  $(".closeadd").click(() => $("#adduser").modal('hide'))
+  $("#saveuser").click(() => {
+    let data = new FormData($('#ajax').get(0));
+    // datas=data+{action:'adduser',name:newusername,image:images,'csrfmiddlewaretoken': '{{ csrf_token }}'}
+    $.ajax('/add', {
+      type: 'POST',  // http method
+      data: data,
+      contentType: 'multipart/form-data',
+      processData: false,
+      contentType: false,
+      success: function (data) {
+        fetchAdmin()
+        showMsg('User added successfully.')
+      }
+    });
+    $("#newuserimage").val('');
+    $("#newusername").val('');
+    $("#adduser").modal('hide');
+  });
+
+  $(".editadmin").click(() => $("#edituser").modal('show'))
+  $("#editsubmit").click(() => {
+    let data = new FormData($('#ajax').get(0));
+    console.log(data)
+    $.ajax('/add', {
+      type: 'POST',
+      data: data,
+      contentType: 'multipart/form-data',
+      processData: false,
+      contentType: false,
+      success: function (data) {
+        console.log('hii')
+        // fetchAdmin()
+      }
+    });
+    $("#edituserimage").val('');
+    $("#editusername").val('');
+    $("#edituser").modal('hide');
+  });
+
+
+  $('#delad').on('click',(e) => {
+    console.log('hii',e)
+  }) 
+  function deleteadmin(arg){
+    const adminid = arg.id.toString().slice(6);
+$.ajax({
+     type: "POST",
+     url: "/add/deleteadmin",
+     data: {id: adminid,
+     csrfmiddlewaretoken: '{{ csrf_token }}'},
+     success: function(data){
+       fetchAdmin()
+       showMsg('User Deleted successfully.')
+     }
+ }); 
+  }
+
+function calibrate(){
+  $.ajax('/add/calibrate', {
+      type: 'GET',  // http method
+      processData: false,
+      dataType: 'json',
+      success: function (data) {
+        showMsg('Calibration complete')
+      }
+
+    });
+}
+
+</script>
+{%endblock%}
+
+
+<!-- -->
+

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Control Panel{% endblock %}
+
+
+{% block inbody %}
+<h1 class="h2">Control Panel</h1>
+
+<div class="btn-toolbar mb-2 mb-md-0">
+  <div class="btn-group me-2">
+    <h6>Door Status:</h6> <span style="margin-left: 1rem;" id="doorstatus">Closed</span>
+    <!-- <button type="button" class="btn btn-sm btn-outline-secondary">
+      button
+    </button> -->
+  </div>
+</div>
+
+</div>
+<ul class="list-group">
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      Smart Mode:
+      <button type="button" class="btn btn-sm btn-outline-secondary" id="smartbtn">Enable</button>
+    </li>
+    <span id="replacespan"></span>
+   
+  </ul>
+
+<div class="container-fluid">
+
+
+
+
+</div>
+{%endblock%}
+{%block script%}
+<script>
+  
+  $("button#smartbtn").click(()=>{
+    $('.alert').alert()
+    if ($("#smartbtn").text()=='Enable'){
+    $("#smartbtn").text('Disable')
+    status.startruntime = new Date().getMinutes()
+      const replaceString = `<hr>
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      Runtime:
+      <button type="button" class="btn btn-sm btn-outline-secondary">
+        <span id="runtime">0</span> min
+      </button>
+    </li>
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      Last Seen:
+      <button type="button" class="btn btn-sm btn-outline-secondary">
+        <span id="lastseen">Nobody</span>
+      </button>
+    </li>
+    `
+    $.ajax('/home/doorstart', {
+      type: 'GET',  // http method
+      processData: false,
+      dataType: 'json',
+      success: function (data) {
+        $("#replacespan").html(replaceString)
+      }
+
+    });
+    }
+    else if (($("#smartbtn").text()=='Disable')){
+      $("#smartbtn").text('Enable')
+      $.ajax('/home/doorstop', {
+      type: 'GET',  // http method
+      processData: false,
+      dataType: 'json',
+      success: function (data) {
+        $("#replacespan").html('')
+      }
+
+    });
+      
+    }
+  })
+
+</script>
+{% endblock %}
